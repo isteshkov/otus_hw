@@ -1,4 +1,4 @@
-module github.com/isteshkov/otus_hw/hw01_hello_otus
+module github.com/isteshkov/otus_hw/hw01_hello_otus/v1
 
 go 1.15
 
