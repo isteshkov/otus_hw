@@ -26,30 +26,32 @@ func Unpack(s string) (string, error) {
 
 	resultStr := strings.Builder{}
 
-	for i, v := range s {
-		if unicode.IsDigit(v) { //nolint
+	for i, v := range runeStr {
+		if unicode.IsDigit(v) {
 			// if prev symbol is digit then error (two or more digits in string)
-			if unicode.IsDigit(runeStr[i-1]) {
+			if i > 0 && unicode.IsDigit(runeStr[i-1]) {
 				return "", ErrInvalidString
 			}
+
 			intV, _ := strconv.Atoi(string(v))
 			if intV > 0 {
 				resultStr.WriteString(strings.Repeat(string(runeStr[i-1]), intV))
 			}
-		} else {
-			// last letter in string
-			if i == len(runeStr)-1 {
-				// write previous if it's not a digit
-				if i > 0 && !unicode.IsDigit(runeStr[i-1]) {
-					resultStr.WriteString(strings.Repeat(string(runeStr[i-1]), 1))
-				}
-				// write it once
-				resultStr.WriteString(strings.Repeat(string(v), 1))
-			} else
-			// not first letter and previous is not digit write previous once
+			continue
+		}
+		// last letter in string
+		if i == len(runeStr)-1 {
+			// write previous if it's not a digit
 			if i > 0 && !unicode.IsDigit(runeStr[i-1]) {
 				resultStr.WriteString(strings.Repeat(string(runeStr[i-1]), 1))
 			}
+			// write it once
+			resultStr.WriteString(strings.Repeat(string(v), 1))
+			continue
+		}
+		// not first letter and previous is not digit write previous once
+		if i > 0 && !unicode.IsDigit(runeStr[i-1]) {
+			resultStr.WriteString(strings.Repeat(string(runeStr[i-1]), 1))
 		}
 	}
 
