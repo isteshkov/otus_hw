@@ -9,7 +9,8 @@ import (
 // Change to true if needed
 var taskWithAsteriskIsCompleted = false
 
-var text = `Как видите, он  спускается  по  лестнице  вслед  за  своим
+var (
+	text = `Как видите, он  спускается  по  лестнице  вслед  за  своим
 	другом   Кристофером   Робином,   головой   вниз,  пересчитывая
 	ступеньки собственным затылком:  бум-бум-бум.  Другого  способа
 	сходить  с  лестницы  он  пока  не  знает.  Иногда ему, правда,
@@ -43,6 +44,28 @@ var text = `Как видите, он  спускается  по  лестни�
 	посидеть у огня и послушать какую-нибудь интересную сказку.
 		В этот вечер...`
 
+	text2 = `
+		mno mno mno mno mno mno mno mno mno mno
+		tuv tuv tuv tuv tuv tuv tuv tuv tuv
+		wxyz wxyz wxyz wxyz wxyz wxyz wxyz wxyz
+		abc abc abc abc abc abc abc
+		def def def def def def def
+        - - - - -
+		pqrs pqrs pqrs pqrs
+		jkl jkl jkl
+		ghi ghi
+		#
+`
+	text3 = `
+		mno mno mno mno mno mno mno mno mno mno
+		tuv tuv tuv tuv tuv tuv tuv tuv tuv
+		wxyz wxyz wxyz wxyz wxyz wxyz wxyz wxyz
+		def def def def def def def
+		abc abc abc abc abc abc abc
+        - - - - -
+`
+)
+
 func TestTop10(t *testing.T) {
 	t.Run("no words in empty string", func(t *testing.T) {
 		require.Len(t, Top10(""), 0)
@@ -55,6 +78,10 @@ func TestTop10(t *testing.T) {
 		} else {
 			expected := []string{"он", "и", "а", "что", "ты", "не", "если", "-", "то", "Кристофер"}
 			require.ElementsMatch(t, expected, Top10(text))
+			expected2 := []string{"mno", "tuv", "wxyz", "abc", "def", "-", "pqrs", "jkl", "ghi", "#"}
+			require.ElementsMatch(t, expected2, Top10(text2))
+			expected3 := []string{"mno", "tuv", "wxyz", "abc", "def", "-"}
+			require.ElementsMatch(t, expected3, Top10(text3))
 		}
 	})
 }
