@@ -56,6 +56,14 @@ var (
 		ghi ghi
 		#
 `
+	text3 = `
+		mno mno mno mno mno mno mno mno mno mno
+		tuv tuv tuv tuv tuv tuv tuv tuv tuv
+		wxyz wxyz wxyz wxyz wxyz wxyz wxyz wxyz
+		def def def def def def def
+		abc abc abc abc abc abc abc
+        - - - - -
+`
 )
 
 func TestTop10(t *testing.T) {
@@ -72,6 +80,8 @@ func TestTop10(t *testing.T) {
 			require.ElementsMatch(t, expected, Top10(text))
 			expected2 := []string{"mno", "tuv", "wxyz", "abc", "def", "-", "pqrs", "jkl", "ghi", "#"}
 			require.ElementsMatch(t, expected2, Top10(text2))
+			expected3 := []string{"mno", "tuv", "wxyz", "abc", "def", "-"}
+			require.ElementsMatch(t, expected3, Top10(text3))
 		}
 	})
 }

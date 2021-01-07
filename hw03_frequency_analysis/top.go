@@ -30,12 +30,18 @@ func Top10(s string) []string {
 	}
 
 	sort.Slice(wordsSort, func(i, j int) bool {
-		return wordsSort[j].Count < wordsSort[i].Count
+		if wordsSort[i].Count == wordsSort[j].Count {
+			return wordsSort[i].Value > wordsSort[j].Value
+		}
+		return wordsSort[i].Count > wordsSort[j].Count
 	})
 
 	top := make([]string, 0, 10)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < len(wordsSort); i++ {
 		top = append(top, wordsSort[i].Value)
+		if len(top) == 10 {
+			break
+		}
 	}
 
 	return top
