@@ -1,12 +1,10 @@
 package hw04_lru_cache //nolint:golint,stylecheck
-
 import (
+	"github.com/stretchr/testify/require"
 	"math/rand"
 	"strconv"
 	"sync"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestCache(t *testing.T) {
