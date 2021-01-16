@@ -11,9 +11,9 @@ type List interface {
 }
 
 type listItem struct {
+	Prev  *listItem
 	Value interface{}
 	Next  *listItem
-	Prev  *listItem
 }
 
 type list struct {
@@ -159,7 +159,6 @@ func (l *list) MoveToFront(i *listItem) {
 			l.lastItem.Next = nil
 			return
 		}
-		// fmt.Printf("move i: %+v -> prev(%+v) [%+v] next(%+v)", i, i.Prev, i.Value, i.Next)
 		i.Prev.Next = i.Next
 		i.Next.Prev = i.Prev
 		i.Prev = nil
@@ -168,11 +167,7 @@ func (l *list) MoveToFront(i *listItem) {
 		return
 	}
 
-	l.swapEdges()
-}
-
-func (l *list) swapEdges() {
-	l.firstItem.Value, l.lastItem.Value = l.lastItem.Value, l.firstItem.Value
-	l.firstItem.Prev, l.firstItem.Next = l.lastItem.Next, l.lastItem.Prev
-	l.lastItem.Next, l.lastItem.Prev = l.firstItem.Prev, l.firstItem.Next
+	l.firstItem, l.lastItem = l.lastItem, l.firstItem
+	l.firstItem.Next, l.firstItem.Prev = l.firstItem.Prev, l.firstItem.Next
+	l.lastItem.Next, l.lastItem.Prev = l.lastItem.Prev, l.lastItem.Next
 }

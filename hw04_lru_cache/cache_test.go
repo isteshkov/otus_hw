@@ -48,13 +48,91 @@ func TestCache(t *testing.T) {
 	})
 
 	t.Run("purge logic", func(t *testing.T) {
-		// Write me
+		t.Run("out of capacity", func(t *testing.T) {
+			c := NewCache(3)
+
+			var key1, key2, key3, key4, key5 Key
+			key1, key2, key3, key4, key5 = "aaa", "bbb", "ccc", "ddd", "eee"
+
+			wasInCache := c.Set(key1, 1)
+			require.False(t, wasInCache)
+
+			wasInCache = c.Set(key2, 2)
+			require.False(t, wasInCache)
+
+			wasInCache = c.Set(key3, 3)
+			require.False(t, wasInCache)
+
+			v, ok := c.Get(key1)
+			require.True(t, ok)
+			require.Equal(t, 1, v)
+			v, ok = c.Get(key2)
+			require.True(t, ok)
+			require.Equal(t, 2, v)
+			v, ok = c.Get(key3)
+			require.True(t, ok)
+			require.Equal(t, 3, v)
+
+			wasInCache = c.Set(key4, 4)
+			require.False(t, wasInCache)
+			_, ok = c.Get(key1)
+			require.False(t, ok)
+
+			wasInCache = c.Set(key5, 5)
+			require.False(t, wasInCache)
+			_, ok = c.Get(key2)
+			require.False(t, ok)
+		})
+		t.Run("rarely used", func(t *testing.T) {
+			c := NewCache(3)
+
+			var key1, key2, rareKey3, key4 Key
+			key1, key2, rareKey3, key4 = "aaa", "bbb", "ccc", "ddd"
+			val1, val2, val3, val4 := 1, 2, 3, 4
+
+			wasInCache := c.Set(key1, val1)
+			require.False(t, wasInCache)
+
+			wasInCache = c.Set(key2, val2)
+			require.False(t, wasInCache)
+
+			wasInCache = c.Set(rareKey3, val3)
+			require.False(t, wasInCache)
+
+			v, ok := c.Get(key1)
+			require.True(t, ok)
+			require.Equal(t, val1, v)
+
+			v, ok = c.Get(rareKey3)
+			require.True(t, ok)
+			require.Equal(t, val3, v)
+
+			v, ok = c.Get(key2)
+			require.True(t, ok)
+			require.Equal(t, val2, v)
+
+			newVal1 := 77
+			wasInCache = c.Set(key1, newVal1)
+			require.True(t, wasInCache)
+
+			newVal2 := 88
+			wasInCache = c.Set(key2, newVal2)
+			require.True(t, wasInCache)
+
+			// key1 used 2 times
+			// key2 used 2 times
+			// key3 used 1 times
+
+			wasInCache = c.Set(key4, val4)
+			require.False(t, wasInCache)
+			// key3 pushed out from cache
+			_, ok = c.Get(rareKey3)
+			require.False(t, ok)
+		})
 	})
 }
 
 func TestCacheMultithreading(t *testing.T) {
-	t.Skip() // NeedRemove if task with asterisk completed
-
 	c := NewCache(10)
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
