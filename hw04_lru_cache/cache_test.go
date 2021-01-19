@@ -9,7 +9,8 @@ import (
 
 func TestCache(t *testing.T) {
 	t.Run("empty cache", func(t *testing.T) {
-		c := NewCache(10)
+		c, err := NewCache(10)
+		require.NoError(t, err)
 
 		_, ok := c.Get("aaa")
 		require.False(t, ok)
@@ -19,7 +20,8 @@ func TestCache(t *testing.T) {
 	})
 
 	t.Run("simple", func(t *testing.T) {
-		c := NewCache(5)
+		c, err := NewCache(5)
+		require.NoError(t, err)
 
 		wasInCache := c.Set("aaa", 100)
 		require.False(t, wasInCache)
@@ -49,7 +51,8 @@ func TestCache(t *testing.T) {
 
 	t.Run("purge logic", func(t *testing.T) {
 		t.Run("out of capacity", func(t *testing.T) {
-			c := NewCache(3)
+			c, err := NewCache(3)
+			require.NoError(t, err)
 
 			var key1, key2, key3, key4, key5 Key
 			key1, key2, key3, key4, key5 = "aaa", "bbb", "ccc", "ddd", "eee"
@@ -84,7 +87,8 @@ func TestCache(t *testing.T) {
 			require.False(t, ok)
 		})
 		t.Run("rarely used", func(t *testing.T) {
-			c := NewCache(3)
+			c, err := NewCache(3)
+			require.NoError(t, err)
 
 			var key1, key2, rareKey3, key4 Key
 			key1, key2, rareKey3, key4 = "aaa", "bbb", "ccc", "ddd"
@@ -133,7 +137,8 @@ func TestCache(t *testing.T) {
 }
 
 func TestCacheMultithreading(t *testing.T) {
-	c := NewCache(10)
+	c, err := NewCache(10)
+	require.NoError(t, err)
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 

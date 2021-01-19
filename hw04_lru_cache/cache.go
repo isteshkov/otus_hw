@@ -1,9 +1,8 @@
 package hw04_lru_cache //nolint:golint,stylecheck
 import (
+	"fmt"
 	"sync"
 )
-
-const defaultCapacity = 5
 
 type Key string
 
@@ -25,16 +24,16 @@ type cacheItem struct {
 	Value interface{}
 }
 
-func NewCache(capacity int) Cache {
+func NewCache(capacity int) (Cache, error) {
 	if capacity <= 0 {
-		capacity = defaultCapacity
+		return nil, fmt.Errorf("invalid capacity value, should be > 0")
 	}
 
 	return &lruCache{
 		capacity: capacity,
 		queue:    NewList(),
 		items:    make(map[Key]*listItem, capacity),
-	}
+	}, nil
 }
 
 func (c *lruCache) Set(k Key, v interface{}) bool {
