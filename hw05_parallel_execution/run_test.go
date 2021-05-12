@@ -37,6 +37,31 @@ func TestRun(t *testing.T) {
 		require.LessOrEqual(t, runTasksCount, int32(workersCount+maxErrorsCount), "extra tasks were started")
 	})
 
+	t.Run("if were errors in single task then finish and return error", func(t *testing.T) {
+		tasksCount := 10
+		tasks := make([]Task, 0, tasksCount)
+
+		err := fmt.Errorf("error from task")
+		tasks = append(tasks, func() error {
+			time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)))
+			return err
+		})
+		for i := 0; i < tasksCount-1; i++ {
+			tasks = append(tasks, func() error {
+				time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)))
+				return nil
+			})
+		}
+
+		workersCount := 5
+		maxErrorsCount := 0
+		result := Run(tasks, workersCount, maxErrorsCount)
+		require.Equal(t, ErrErrorsLimitExceeded, result)
+
+		result = Run(tasks[1:], workersCount, maxErrorsCount)
+		require.Equal(t, nil, result)
+	})
+
 	t.Run("tasks without errors", func(t *testing.T) {
 		tasksCount := 50
 		tasks := make([]Task, 0, tasksCount)

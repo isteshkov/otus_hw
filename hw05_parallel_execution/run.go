@@ -11,13 +11,17 @@ type Task func() error
 
 func Run(tasks []Task, N int, M int) error {
 	// Place your code here
+	var complete, errs int
+	var err error
 	doneCh := make(chan struct{})
 	tasksCh := make(chan Task)
-	errorsCh := make(chan struct{})
-	completeCh := make(chan struct{})
+	resultCh := make(chan error)
+	wg := &sync.WaitGroup{}
 
-	go func(done chan struct{}) {
-		defer close(tasksCh)
+	go func(done <-chan struct{}) {
+		defer func() {
+			close(tasksCh)
+		}()
 		for i := range tasks {
 			select {
 			case <-done:
@@ -28,64 +32,62 @@ func Run(tasks []Task, N int, M int) error {
 			select {
 			case <-done:
 				return
-			default:
-				tasksCh <- tasks[i]
+			case tasksCh <- tasks[i]:
 			}
 		}
 	}(doneCh)
 
 	for i := 0; i < N; i++ {
-		go func(done <-chan struct{}, errCh chan<- struct{}, complete chan<- struct{}) {
+		go func() {
 			for {
 				select {
-				case <-done:
+				case <-doneCh:
 					return
 				default:
 				}
 
 				select {
-				case <-done:
+				case <-doneCh:
 					return
 				case task := <-tasksCh:
 					if task != nil {
-						err := task()
-						if err != nil {
-							errCh <- struct{}{}
-						} else {
-							complete <- struct{}{}
+						select {
+						case <-doneCh:
+							return
+						case resultCh <- task():
 						}
 					}
 				}
 			}
-		}(doneCh, errorsCh, completeCh)
+		}()
 	}
 
-	wg := &sync.WaitGroup{}
 	wg.Add(1)
-	go func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		complete := 0
-		errs := 0
-		for {
-			select {
-			case <-errorsCh:
+	go func() {
+		defer func() {
+			close(doneCh)
+			wg.Done()
+		}()
+		for res := range resultCh {
+			if res != nil {
 				if M <= 0 {
+					err = ErrErrorsLimitExceeded
 					return
 				}
 				errs++
 				if errs == M {
+					err = ErrErrorsLimitExceeded
 					return
 				}
-			case <-completeCh:
+			} else {
 				complete++
 				if complete == len(tasks) {
 					return
 				}
 			}
 		}
-	}(wg)
+	}()
 
 	wg.Wait()
-	close(doneCh)
-	return nil
+	return err
 }
