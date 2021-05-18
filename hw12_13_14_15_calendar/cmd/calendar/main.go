@@ -5,6 +5,7 @@ import (
 	"flag"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
@@ -33,17 +34,14 @@ func main() {
 	storage := memorystorage.New()
 	calendar := app.New(logg, storage)
 
-	server := internalhttp.NewServer(calendar)
-	ctx, cancel := context.WithCancel(context.Background())
+	server := internalhttp.NewServer(logg, calendar)
+
+	ctx, cancel := signal.NotifyContext(context.Background(),
+		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
 	go func() {
-		signals := make(chan os.Signal, 1)
-		signal.Notify(signals)
-
-		<-signals
-		signal.Stop(signals)
-		cancel()
+		<-ctx.Done()
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 		defer cancel()
@@ -57,6 +55,7 @@ func main() {
 
 	if err := server.Start(ctx); err != nil {
 		logg.Error("failed to start http server: " + err.Error())
-		os.Exit(1)
+		cancel()
+		os.Exit(1) //nolint:gocritic
 	}
 }
