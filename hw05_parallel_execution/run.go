@@ -2,7 +2,6 @@ package hw05_parallel_execution //nolint:golint,stylecheck
 
 import (
 	"errors"
-	"sync"
 )
 
 var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
@@ -16,19 +15,12 @@ func Run(tasks []Task, N int, M int) error {
 	doneCh := make(chan struct{})
 	tasksCh := make(chan Task)
 	resultCh := make(chan error)
-	wg := &sync.WaitGroup{}
 
 	go func(done <-chan struct{}) {
 		defer func() {
 			close(tasksCh)
 		}()
 		for i := range tasks {
-			select {
-			case <-done:
-				return
-			default:
-			}
-
 			select {
 			case <-done:
 				return
@@ -40,12 +32,6 @@ func Run(tasks []Task, N int, M int) error {
 	for i := 0; i < N; i++ {
 		go func() {
 			for {
-				select {
-				case <-doneCh:
-					return
-				default:
-				}
-
 				select {
 				case <-doneCh:
 					return
@@ -62,32 +48,24 @@ func Run(tasks []Task, N int, M int) error {
 		}()
 	}
 
-	wg.Add(1)
-	go func() {
-		defer func() {
-			close(doneCh)
-			wg.Done()
-		}()
-		for res := range resultCh {
-			if res != nil {
-				if M <= 0 {
-					err = ErrErrorsLimitExceeded
-					return
-				}
-				errs++
-				if errs == M {
-					err = ErrErrorsLimitExceeded
-					return
-				}
-			} else {
-				complete++
-				if complete == len(tasks) {
-					return
-				}
+	for res := range resultCh {
+		if res != nil {
+			if M <= 0 {
+				err = ErrErrorsLimitExceeded
+				break
+			}
+			errs++
+			if errs == M {
+				err = ErrErrorsLimitExceeded
+				break
+			}
+		} else {
+			complete++
+			if complete == len(tasks) {
+				break
 			}
 		}
-	}()
-
-	wg.Wait()
+	}
+	close(doneCh)
 	return err
 }
