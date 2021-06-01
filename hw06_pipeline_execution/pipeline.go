@@ -10,25 +10,14 @@ type Stage func(in In) (out Out)
 
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	// Place your code here.
-
-	if len(stages) > 1 {
-		out := WrapStage(ExecutePipeline(in, done, stages[:len(stages)-1]...), done, stages[len(stages)-1])
-		if out != nil {
-			return out
-		}
+	for i := 0; i <= len(stages)-1; i++ {
+		in = wrapStage(in, done, stages[i])
 	}
 
-	if len(stages) == 1 {
-		out := WrapStage(in, done, stages[0])
-		if out != nil {
-			return out
-		}
-	}
-
-	return nil
+	return in
 }
 
-func WrapStage(in In, done In, stage Stage) Out {
+func wrapStage(in In, done In, stage Stage) Out {
 	inStream := make(Bi)
 	go func() {
 		defer close(inStream)
@@ -36,7 +25,8 @@ func WrapStage(in In, done In, stage Stage) Out {
 			select {
 			case <-done:
 				return
-			case inStream <- i:
+			default:
+				inStream <- i
 			}
 		}
 	}()
